@@ -58,7 +58,7 @@ impl<'input> Lexer<'input> {
     /// Creates a new lexer with specified input.
     ///
     /// This function only creates a [`Lexer`], it doesn't start the lexical analysis process.
-    #[must_use = "calling `new()` creates a lexer, which must be used"]
+    #[must_use = "calling `new()` creates a new `Lexer`, which must be used"]
     pub fn new(chars: &'input [char]) -> Self {
         Self {
             chars,

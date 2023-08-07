@@ -24,14 +24,16 @@ impl<'s> Parse<'s> for String<'s> {
 
                 let mut ended = false;
 
-                for v in iter {
+                while let Some(v) = iter.next() {
                     end_idx = v.0;
                     match *v.1 {
                         '"' => {
                             ended = true;
                             break;
                         }
-                        '\\' => (), // TODO: finish escape sequences
+                        '\\' => match iter.next() {
+                            _ => (),
+                        }, // TODO: finish escape sequences
                         _ => string.push(*v.1),
                     }
                 }

@@ -28,16 +28,16 @@ pub struct Number<'int, 'fract> {
     /// The base/radix of the number.
     pub base: Base,
     /// The integer part of the number.
-    pub int_part: &'int str,
+    pub int_part: &'int [char],
     /// The fractional part of the number.
-    pub fract_part: Option<&'fract str>,
+    pub fract_part: Option<&'fract [char]>,
 }
 
 impl<'int, 'fract> Number<'int, 'fract> {
     /// A new [`Number`].
     #[inline(always)]
     #[must_use = "called `new()`, which has to be used"]
-    pub fn new(base: Base, int_part: &'int str, fract_part: Option<&'fract str>) -> Self {
+    pub fn new(base: Base, int_part: &'int [char], fract_part: Option<&'fract [char]>) -> Self {
         Self {
             base,
             int_part,

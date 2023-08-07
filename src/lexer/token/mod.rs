@@ -27,6 +27,9 @@ pub struct Token<'a> {
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenValue<'a> {
+    /// A whitespace character.
+    Whitespace(char),
+
     /// An indentifier or keyword.
     Ident(ident::Ident<'a>),
     /// A number literal, integer or floating point.
@@ -47,7 +50,4 @@ pub enum TokenValue<'a> {
 pub enum Error {
     /// An unterminated string literal.
     UnterminatedStringLiteral,
-
-    /// An invalid token.
-    InvalidToken,
 }
