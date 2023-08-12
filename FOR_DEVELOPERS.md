@@ -5,4 +5,4 @@ The compiler has 2 parts:
  - The library ([src/](src/))
 
 
-If there's anything you need to know about the compiler, reach out to JuniorBecari10 (@juniorbecari10),TadaHrd (@tadahrd), or any other developer on the [Minimal Discord server](https://discord.gg/Qnb3MgNfQG).
+If there's anything you need to know about the compiler, reach out to JuniorBecari10 (@juniorbecari10), TadaHrd (@tadahrd), or any other developer on the [Minimal Discord server](https://discord.gg/Qnb3MgNfQG).
