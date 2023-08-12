@@ -15,7 +15,7 @@ where
     /// A function for converting text into a token.
     ///
     /// Returns [`ParseResult::NoMatch`] if the iterator didn't match,
-    /// [`ParseResult::Eof`] if the attempt to get the first character of the token was `None`,
+    /// [`ParseResult::Eof`] if the text (iterator) ended too soon,
     /// [`ParseResult::Token`] if the iterator did match.
     ///
     /// Parameter `text` is the text, parameter `iter` is the iterator, both from the lexer.

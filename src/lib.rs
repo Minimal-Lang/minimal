@@ -15,4 +15,5 @@
 #![doc(html_favicon_url = "assets/favicon.png")]
 
 pub mod lexer;
+
 pub(crate) mod util;

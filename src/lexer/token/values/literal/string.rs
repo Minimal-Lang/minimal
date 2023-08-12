@@ -14,7 +14,7 @@ pub struct String<'s> {
 
 impl<'s> Parse<'s> for String<'s> {
     fn parse(text: &'s [char], iter: &mut crate::lexer::InputTextIter<'s>) -> ParseResult<'s> {
-        if let Some(v) = iter.peek(1) {
+        if let Some(v) = iter.peek(0) {
             if *v.1 == '\"' {
                 let start_idx = v.0;
                 let mut end_idx = v.0;
@@ -51,7 +51,7 @@ impl<'s> Parse<'s> for String<'s> {
                 } else {
                     ParseResult::Token {
                         lexeme: &text[start_idx..=end_idx],
-                        value: TokenValue::Error(&token::Error::UnterminatedStringLiteral),
+                        value: TokenValue::Error(token::Error::UnterminatedStringLiteral),
                         span: Span {
                             from: start_idx,
                             to: end_idx,

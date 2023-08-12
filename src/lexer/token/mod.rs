@@ -42,7 +42,7 @@ pub enum TokenValue<'a> {
     Operator(operator::Operator),
 
     /// A lexical analysis error.
-    Error(&'a Error),
+    Error(Error),
 }
 
 /// A lexical analysis error.
@@ -50,4 +50,9 @@ pub enum TokenValue<'a> {
 pub enum Error {
     /// An unterminated string literal.
     UnterminatedStringLiteral,
+
+    /// An invalid number suffix.
+    ///
+    /// A number cannot end with arbitrary text.
+    InvalidNumberSuffix,
 }

@@ -1,9 +1,11 @@
 //! The Minimal programming language lexical analyzer.
+//!
+//! Handles parsing of tokens, contains the [`InputTextIter`] type, and the [`Lexer`] struct.
 
 use crate::{
     lexer::{
         parse::{Parse, ParseResult},
-        token::{delim::Delim, ident::Ident},
+        token::{delim::Delim, ident::Ident, literal, operator::Operator, span::Span},
     },
     util::iter::Iter,
 };
@@ -67,17 +69,27 @@ impl<'input> Lexer<'input> {
     }
     /// Gets the next token. Equivalent to `.next()` in iterating.
     pub fn next_token(&mut self) -> Option<Token<'input>> {
-        while self.iter.peek(0)?.1.is_whitespace() {
+        let peek = self.iter.peek(0)?;
+        if peek.1.is_whitespace() {
+            let ret = Some(Token {
+                value: token::TokenValue::Whitespace(*peek.1),
+                lexeme: &self.chars[peek.0..=peek.0],
+                span: Span {
+                    from: peek.0,
+                    to: peek.0,
+                },
+            });
             self.iter.next();
+            return ret;
         }
 
-        parse!(TODO self => literal::String);
-        parse!(TODO self => literal::Number);
+        parse!(/* TODO */ self => literal::String);
         parse!(self => Ident);
         parse!(self => Delim);
+        parse!(self => Operator);
 
-        // `Operator` should come last, as it handles some invalid tokens.
-        parse!(TODO self => Operator);
+        // Numbers come last to save a tiny little bit memory
+        parse!(self => literal::Number);
 
         None
     }

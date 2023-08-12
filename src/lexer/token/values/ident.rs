@@ -29,14 +29,14 @@ impl<'ident> Parse<'ident> for Ident<'ident> {
 
                 while let Some(v) = iter.peek(0) {
                     if !(v.1.is_alphanumeric() || *v.1 == '_') {
-                        end_idx = v.0;
+                        end_idx = v.0 - 1;
 
                         break;
                     }
                     iter.next();
                 }
 
-                let lexeme = &chars[start_idx..end_idx];
+                let lexeme = &chars[start_idx..=end_idx];
 
                 ParseResult::Token {
                     lexeme,

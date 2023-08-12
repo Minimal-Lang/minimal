@@ -1,6 +1,6 @@
 //! The span of a token.
 
-/// The span of a token
+/// The span of a token (exclusive range).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Span {
     /// The start of a token in text.

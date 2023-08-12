@@ -5,7 +5,7 @@ use crate::lexer::{
     token::{span::Span, TokenValue},
 };
 
-/// A delimiter (e.g. semicolons, commas, brackets) token.
+/// An operator (e.g. '+', '?', '!') token.
 #[repr(u8)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Operator {
@@ -57,7 +57,7 @@ impl<'text> Parse<'text> for Operator {
         chars: &'text [char],
         iter: &mut crate::lexer::InputTextIter<'text>,
     ) -> crate::lexer::parse::ParseResult<'text> {
-        if let Some(v) = iter.peek(1) {
+        if let Some(v) = iter.peek(0) {
             let v0 = v.0;
             let val = match *v.1 {
                 '&' => pattern!(iter, chars, v0 => Ampersand),
@@ -65,6 +65,8 @@ impl<'text> Parse<'text> for Operator {
 
                 '!' => pattern!(iter, chars, v0 => Bang),
                 '?' => pattern!(iter, chars, v0 => QuestionMark),
+
+                '=' => pattern!(iter, chars, v0 => Equal),
 
                 '+' => pattern!(iter, chars, v0 => Plus),
                 '-' => pattern!(iter, chars, v0 => Minus),

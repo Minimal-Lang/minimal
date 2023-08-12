@@ -1,10 +1,13 @@
-//! An iterator over text, for the lexer.
+//! An iterator over a slice, used in the compiler.
 
 use std::fmt::Debug;
 
+use super::add_usize_isize;
+
 /// An iterator over a slice.
 ///
-/// Like [`Peekable`](struct@core::iter::Peekable), but you can [`peek`](fn&Iter::peek) into the future as many tokens as you want.
+/// Like [`Peekable`](struct@core::iter::Peekable) but it only works with a slice and
+/// you can [`peek`](fn@Iter::peek) into the future or past as many items as you want.
 #[derive(Clone)]
 pub struct Iter<'a, T>
 where
@@ -43,12 +46,14 @@ impl<'a, T> Iter<'a, T> {
     pub fn from_slice(slice: &'a [T]) -> Self {
         Self { slice, idx: 0 }
     }
-    /// Peeks `n` times into the future, or past if `n` is negative.
+
+    /// Peeks `n` times into the future (0 is the current element), or past if `n` is negative.
     pub fn peek(&self, n: isize) -> Option<(usize, &'a T)> {
-        if (self.idx as isize + n) > self.slice.len() as isize || self.idx as isize + n < 0 {
+        let idx = add_usize_isize(self.idx, n)?;
+        if idx >= self.slice.len() {
             None
         } else {
-            Some((self.idx, &self.slice[(self.idx as isize + n) as usize]))
+            Some((idx, &self.slice[idx]))
         }
     }
 }
