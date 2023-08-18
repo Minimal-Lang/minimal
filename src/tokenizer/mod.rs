@@ -3,7 +3,9 @@
 //! Handles parsing of tokens, contains the [`InputTextIter`] type, and the [`Tokenizer`] struct.
 
 use crate::tokenizer::{
-    token::{delim::Delim, ident::Ident, literal, operator::Operator, span::Span},
+    token::{
+        comment::Comment, delim::Delim, ident::Ident, literal, operator::Operator, span::Span,
+    },
     tokenize::{Tokenize, TokenizeResult},
 };
 
@@ -83,7 +85,7 @@ impl<'input> Tokenizer<'input> {
         // Comments have to go first to prevent it being treated
         // as operators.
         // TODO: create the Comment struct, implement the Tokenize trait for it, document it, remove the TODO from the below line, test it
-        tokenize!(TODO self => Comment);
+        tokenize!(self => Comment);
 
         // Order doesn't really matter but it's best if kept
         // in this order; from least complex to most complex.

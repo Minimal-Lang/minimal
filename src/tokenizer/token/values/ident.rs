@@ -37,7 +37,7 @@ impl<'ident> Tokenize<'ident> for Ident<'ident> {
                     iter.next();
                 }
 
-                let lexeme = &chars[start_idx..=end_idx];
+                let lexeme = &chars[start_idx..end_idx];
 
                 TokenizeResult::Token {
                     lexeme,

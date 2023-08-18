@@ -35,14 +35,14 @@ pub enum TokenValue<'a> {
     Whitespace(char),
 
     /// A comment.
-    Comment(comment::Comment),
+    Comment(comment::Comment<'a>),
 
     /// An indentifier or keyword.
     Ident(ident::Ident<'a>),
     /// A number literal (integer or floating point).
     ///
     /// The tokenizer **doesn't** make sure number works with its radix
-    Number(literal::Number<'a, 'a>),
+    Number(literal::Number<'a, 'a, 'a>),
     /// A string literal.
     String(literal::String<'a>),
     /// A delimiter, like brackets and colons.
@@ -62,4 +62,7 @@ pub enum Error {
 
     /// No number after base prefix in number literal.
     NoNumberAfterBase,
+
+    /// Unterminated block comment.
+    UnterminatedBlockComment,
 }
