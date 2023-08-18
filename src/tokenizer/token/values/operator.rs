@@ -1,8 +1,8 @@
 //! The module for operator (e.g. `+`, `?`, `=`, `!`) tokens.
 
-use crate::lexer::{
-    parse::{Parse, ParseResult},
+use crate::tokenizer::{
     token::{span::Span, TokenValue},
+    tokenize::{Tokenize, TokenizeResult},
 };
 
 /// An operator (e.g. '+', '?', '!') token.
@@ -41,7 +41,7 @@ pub enum Operator {
 macro_rules! pattern {
     ($iter:expr, $chars:expr, $lexeme_and_span:expr => $name:ident) => {{
         $iter.next();
-        Some(ParseResult::Token {
+        Some(TokenizeResult::Token {
             lexeme: &$chars[$lexeme_and_span..=$lexeme_and_span],
             value: TokenValue::Operator(Operator::$name),
             span: Span {
@@ -52,11 +52,11 @@ macro_rules! pattern {
     }};
 }
 
-impl<'text> Parse<'text> for Operator {
-    fn parse(
+impl<'text> Tokenize<'text> for Operator {
+    fn tokenize(
         chars: &'text [char],
-        iter: &mut crate::lexer::InputTextIter<'text>,
-    ) -> crate::lexer::parse::ParseResult<'text> {
+        iter: &mut crate::tokenizer::InputTextIter<'text>,
+    ) -> crate::tokenizer::tokenize::TokenizeResult<'text> {
         if let Some(v) = iter.peek(0) {
             let v0 = v.0;
             let val = match *v.1 {
@@ -76,9 +76,9 @@ impl<'text> Parse<'text> for Operator {
 
                 _ => None,
             };
-            val.unwrap_or(ParseResult::NoMatch)
+            val.unwrap_or(TokenizeResult::NoMatch)
         } else {
-            ParseResult::Eof
+            TokenizeResult::Eof
         }
     }
 }

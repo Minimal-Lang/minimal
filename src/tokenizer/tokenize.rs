@@ -1,4 +1,4 @@
-//! The trait and result type for parsing tokens.
+//! The trait and result type for tokenizing text.
 
 use std::fmt::Debug;
 
@@ -7,27 +7,27 @@ use super::{
     InputTextIter,
 };
 
-/// Trait for converting text into tokens.
-pub trait Parse<'text>
+/// Trait for tokenizing text.
+pub trait Tokenize<'text>
 where
     Self: Debug + Clone,
 {
-    /// A function for converting text into a token.
+    /// Tokenizes text.
     ///
-    /// Returns [`ParseResult::NoMatch`] if the iterator didn't match,
-    /// [`ParseResult::Eof`] if the text (iterator) ended too soon,
-    /// [`ParseResult::Token`] if the iterator did match.
+    /// Parameter `text` is the text, parameter `iter` is the iterator, both from the same source.
     ///
-    /// Parameter `text` is the text, parameter `iter` is the iterator, both from the lexer.
+    /// Returns [`TokenizeResult::NoMatch`] if the iterator didn't match,
+    /// [`TokenizeResult::Eof`] if the iterator (text) ended too soon,
+    /// [`TokenizeResult::Token`] if the iterator did match.
     ///
     /// The iterator is consumed if it matches, isn't if it doesn't.
     #[must_use]
-    fn parse(chars: &'text [char], iter: &mut InputTextIter<'text>) -> ParseResult<'text>;
+    fn tokenize(chars: &'text [char], iter: &mut InputTextIter<'text>) -> TokenizeResult<'text>;
 }
 
-/// Result type for the [`parse`](fn@Parse::parse) function from the [`Parse`] trait.
+/// Result type for the [`tokenize`](fn@Tokenize::tokenize) function from the [`Tokenize`] trait.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ParseResult<'text> {
+pub enum TokenizeResult<'text> {
     /// A token, returned if text matched.
     ///
     /// `lexeme` is the part of the text that contains the whole token,

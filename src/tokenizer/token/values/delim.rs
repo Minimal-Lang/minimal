@@ -1,7 +1,7 @@
 //! The module for delimiter (e.g. semicolons, commas, brackets) tokens.
 
-use crate::lexer::{
-    parse::{Parse, ParseResult},
+use crate::tokenizer::{
+    tokenize::{Tokenize, TokenizeResult},
     InputTextIter,
 };
 
@@ -41,7 +41,7 @@ pub enum Delim {
 macro_rules! pattern {
     ($iter:expr, $chars:expr, $lexeme_and_span:expr => $name:ident) => {{
         $iter.next();
-        Some(ParseResult::Token {
+        Some(TokenizeResult::Token {
             lexeme: &$chars[$lexeme_and_span..=$lexeme_and_span],
             value: TokenValue::Delim(Delim::$name),
             span: Span {
@@ -52,8 +52,8 @@ macro_rules! pattern {
     }};
 }
 
-impl<'text> Parse<'text> for Delim {
-    fn parse(chars: &'text [char], iter: &mut InputTextIter<'text>) -> ParseResult<'text> {
+impl<'text> Tokenize<'text> for Delim {
+    fn tokenize(chars: &'text [char], iter: &mut InputTextIter<'text>) -> TokenizeResult<'text> {
         if let Some(v) = iter.peek(0) {
             let v0 = v.0;
             let val = match *v.1 {
@@ -78,10 +78,10 @@ impl<'text> Parse<'text> for Delim {
             if let Some(val) = val {
                 val
             } else {
-                ParseResult::NoMatch
+                TokenizeResult::NoMatch
             }
         } else {
-            ParseResult::Eof
+            TokenizeResult::Eof
         }
     }
 }
