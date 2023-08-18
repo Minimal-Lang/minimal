@@ -31,11 +31,7 @@ where
     type Item = (usize, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let ret = if self.idx > self.slice.len() {
-            None
-        } else {
-            Some((self.idx, &self.slice[self.idx]))
-        };
+        let ret = self.slice.get(self.idx).map(|v| (self.idx, v));
         self.idx += 1;
         ret
     }
@@ -50,10 +46,6 @@ impl<'a, T> Iter<'a, T> {
     /// Peeks `n` times into the future (0 is the current element), or past if `n` is negative.
     pub fn peek(&self, n: isize) -> Option<(usize, &'a T)> {
         let idx = add_usize_isize(self.idx, n)?;
-        if idx >= self.slice.len() {
-            None
-        } else {
-            Some((idx, &self.slice[idx]))
-        }
+        self.slice.get(idx).map(|v| (idx, v))
     }
 }

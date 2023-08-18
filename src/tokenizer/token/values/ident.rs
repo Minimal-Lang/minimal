@@ -1,6 +1,6 @@
 //! The module for identfier tokens, including keywords.
 
-use crate::lexer::parse::{Parse, ParseResult};
+use crate::tokenizer::tokenize::{Tokenize, TokenizeResult};
 
 use super::{span::Span, TokenValue};
 
@@ -12,14 +12,15 @@ use super::{span::Span, TokenValue};
 /// Whether an `Ident` is a keyword or just an identifier is determined by the parser.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Ident<'ident> {
-    value: &'ident [char],
+    /// The value of the ident, same as the lexeme.
+    pub value: &'ident [char],
 }
 
-impl<'ident> Parse<'ident> for Ident<'ident> {
-    fn parse(
+impl<'ident> Tokenize<'ident> for Ident<'ident> {
+    fn tokenize(
         chars: &'ident [char],
-        iter: &mut crate::lexer::InputTextIter<'ident>,
-    ) -> ParseResult<'ident> {
+        iter: &mut crate::tokenizer::InputTextIter<'ident>,
+    ) -> TokenizeResult<'ident> {
         if let Some(v) = iter.peek(0) {
             if v.1.is_alphabetic() || *v.1 == '_' {
                 let start_idx = v.0;
@@ -36,9 +37,9 @@ impl<'ident> Parse<'ident> for Ident<'ident> {
                     iter.next();
                 }
 
-                let lexeme = &chars[start_idx..=end_idx];
+                let lexeme = &chars[start_idx..end_idx];
 
-                ParseResult::Token {
+                TokenizeResult::Token {
                     lexeme,
                     value: TokenValue::Ident(Self { value: lexeme }),
                     span: Span {
@@ -47,10 +48,10 @@ impl<'ident> Parse<'ident> for Ident<'ident> {
                     },
                 }
             } else {
-                ParseResult::NoMatch
+                TokenizeResult::NoMatch
             }
         } else {
-            ParseResult::Eof
+            TokenizeResult::Eof
         }
     }
 }

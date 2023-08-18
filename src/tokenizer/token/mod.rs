@@ -1,4 +1,5 @@
-//! A token, output of the lexer, input of the parser.
+// TODO: link to the lexer token
+//! A token, output of the tokenizer, input of the lexer (not to be confused with [`lexer::Token`](TODO)).
 
 #[path = "values/delim.rs"]
 pub mod delim;
@@ -10,9 +11,12 @@ pub mod operator;
 #[path = "values/literal/mod.rs"]
 pub mod literal;
 
+#[path = "values/comment.rs"]
+pub mod comment;
+
 pub mod span;
 
-/// A token, output of the lexer, input of the parser.
+/// A token, output of the tokenizer, input of the lexer.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Token<'a> {
     /// The whole token as a string
@@ -30,10 +34,15 @@ pub enum TokenValue<'a> {
     /// A whitespace character.
     Whitespace(char),
 
+    /// A comment.
+    Comment(comment::Comment<'a>),
+
     /// An indentifier or keyword.
     Ident(ident::Ident<'a>),
-    /// A number literal, integer or floating point.
-    Number(literal::Number<'a, 'a>),
+    /// A number literal (integer or floating point).
+    ///
+    /// The tokenizer **doesn't** make sure number works with its radix
+    Number(literal::Number<'a, 'a, 'a>),
     /// A string literal.
     String(literal::String<'a>),
     /// A delimiter, like brackets and colons.
@@ -41,7 +50,7 @@ pub enum TokenValue<'a> {
     /// An operator, like `+`, `=`, `?`, `!`.
     Operator(operator::Operator),
 
-    /// A lexical analysis error.
+    /// A tokenization error.
     Error(Error),
 }
 
@@ -51,8 +60,9 @@ pub enum Error {
     /// An unterminated string literal.
     UnterminatedStringLiteral,
 
-    /// An invalid number suffix.
-    ///
-    /// A number cannot end with arbitrary text.
-    InvalidNumberSuffix,
+    /// No number after base prefix in number literal.
+    NoNumberAfterBase,
+
+    /// Unterminated block comment.
+    UnterminatedBlockComment,
 }

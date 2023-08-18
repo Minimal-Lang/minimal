@@ -1,8 +1,8 @@
 //! The module for string literals.
 
-use crate::lexer::{
-    parse::{Parse, ParseResult},
+use crate::tokenizer::{
     token::{self, span::Span, TokenValue},
+    tokenize::{Tokenize, TokenizeResult},
 };
 
 /// A string token value.
@@ -12,8 +12,11 @@ pub struct String<'s> {
     pub s: &'s str,
 }
 
-impl<'s> Parse<'s> for String<'s> {
-    fn parse(text: &'s [char], iter: &mut crate::lexer::InputTextIter<'s>) -> ParseResult<'s> {
+impl<'s> Tokenize<'s> for String<'s> {
+    fn tokenize(
+        text: &'s [char],
+        iter: &mut crate::tokenizer::InputTextIter<'s>,
+    ) -> TokenizeResult<'s> {
         if let Some(v) = iter.peek(0) {
             if *v.1 == '\"' {
                 let start_idx = v.0;
@@ -38,7 +41,7 @@ impl<'s> Parse<'s> for String<'s> {
                     }
                 }
                 if ended {
-                    ParseResult::Token {
+                    TokenizeResult::Token {
                         lexeme: &text[start_idx..=end_idx],
                         value: TokenValue::String(String {
                             s: Box::leak(Box::new(string)),
@@ -49,7 +52,7 @@ impl<'s> Parse<'s> for String<'s> {
                         },
                     }
                 } else {
-                    ParseResult::Token {
+                    TokenizeResult::Token {
                         lexeme: &text[start_idx..=end_idx],
                         value: TokenValue::Error(token::Error::UnterminatedStringLiteral),
                         span: Span {
@@ -59,10 +62,10 @@ impl<'s> Parse<'s> for String<'s> {
                     }
                 }
             } else {
-                ParseResult::NoMatch
+                TokenizeResult::NoMatch
             }
         } else {
-            ParseResult::Eof
+            TokenizeResult::Eof
         }
     }
 }
