@@ -2,14 +2,12 @@
 //!
 //! Handles parsing of tokens, contains the [`InputTextIter`] type, and the [`Tokenizer`] struct.
 
+use std::collections::VecDeque;
+
 use crate::tokenizer::{
-    token::{
-        comment::Comment, delim::Delim, ident::Ident, literal, operator::Operator, span::Span,
-    },
+    token::{comment::Comment, delim::Delim, ident::Ident, literal, operator::Operator, Token},
     tokenize::{Tokenize, TokenizeResult},
 };
-
-use self::token::Token;
 
 pub mod token;
 pub mod tokenize;
@@ -25,13 +23,14 @@ pub type InputTextIter<'text> = crate::util::iter::Iter<'text, char>;
 ///
 /// ```rust
 /// # use minimal_compiler::tokenizer::Tokenizer;
-/// let input_code = &stringify!(Hello, "world"!).chars().collect::<Vec<char>>();
-/// let tokenizer = Tokenizer::new(input_code);
+/// let input_code = stringify!(Hello, "world"!).chars().collect::<Vec<char>>();
+/// let tokenizer = Tokenizer::new(&input_code);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Tokenizer<'input> {
     chars: &'input [char],
     iter: InputTextIter<'input>,
+    error_stack: Option<VecDeque<Token<'input>>>,
 }
 
 macro_rules! tokenize {
@@ -42,12 +41,18 @@ macro_rules! tokenize {
                 value,
                 lexeme,
                 span,
+                errors,
             } => {
+                if let Some(errors) = errors {
+                    if errors.len() > 0 {
+                        $self.error_stack = Some(VecDeque::from(errors));
+                    }
+                }
                 return Some(Token {
                     lexeme,
                     value,
                     span,
-                })
+                });
             }
             TokenizeResult::Eof => return None,
             _ => (),
@@ -59,32 +64,36 @@ impl<'input> Tokenizer<'input> {
     /// Creates a new tokenizer with specified input.
     ///
     /// This function only creates a [`Tokenizer`], it doesn't start the lexical analysis process.
-    #[must_use = "calling `new()` creates a new `Tokenizer`, which must be used"]
+    #[must_use]
     pub fn new(chars: &'input [char]) -> Self {
         Self {
             chars,
             iter: InputTextIter::from_slice(chars),
+            error_stack: None,
         }
     }
     /// Gets the next token. Equivalent to `.next()` in iterating (that's why it's private).
     fn next_token(&mut self) -> Option<Token<'input>> {
+        if let Some(error_stack) = &mut self.error_stack {
+            match error_stack.pop_front() {
+                None => self.error_stack = None,
+                v @ Some(_) => return v,
+            }
+        }
+
         // Removes whitespaces.
         let peek = self.iter.peek(0)?;
         if peek.1.is_whitespace() {
             self.iter.next();
             return Some(Token {
-                value: token::TokenValue::Whitespace(*peek.1),
                 lexeme: &self.chars[peek.0..=peek.0],
-                span: Span {
-                    from: peek.0,
-                    to: peek.0,
-                },
+                value: token::TokenValue::Whitespace,
+                span: peek.0..peek.0 + 1,
             });
         }
 
-        // Comments have to go first to prevent it being treated
+        // Comments have to go first to prevent being treated
         // as operators.
-        // TODO: create the Comment struct, implement the Tokenize trait for it, document it, remove the TODO from the below line, test it
         tokenize!(self => Comment);
 
         // Order doesn't really matter but it's best if kept
@@ -96,10 +105,18 @@ impl<'input> Tokenizer<'input> {
         tokenize!(self => Ident);
         tokenize!(self => literal::String);
 
-        // Numbers are considered more complex than strings.
+        // Numbers are more complex than strings.
         tokenize!(self => literal::Number);
 
-        None // FIXME: should be invalid token error instead
+        if let Some((idx, _)) = self.iter.peek(0) {
+            Some(Token {
+                lexeme: &self.chars[idx..=idx],
+                value: token::TokenValue::Error(token::Error::InvalidCharacter),
+                span: idx..idx + 1,
+            })
+        } else {
+            None
+        }
     }
 }
 

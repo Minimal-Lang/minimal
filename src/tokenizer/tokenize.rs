@@ -1,9 +1,9 @@
 //! The trait and result type for tokenizing text.
 
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Range};
 
 use super::{
-    token::{span::Span, TokenValue},
+    token::{Token, TokenValue},
     InputTextIter,
 };
 
@@ -26,7 +26,7 @@ where
 }
 
 /// Result type for the [`tokenize`](fn@Tokenize::tokenize) function from the [`Tokenize`] trait.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenizeResult<'text> {
     /// A token, returned if text matched.
     ///
@@ -38,8 +38,11 @@ pub enum TokenizeResult<'text> {
         lexeme: &'text [char],
         /// The value of the token as an enum variant.
         value: TokenValue<'text>,
-        /// The [`Span`](struct@super::token::span::Span) of the token.
-        span: Span,
+        /// The span of the token.
+        span: Range<usize>,
+
+        /// The errors in the token
+        errors: Option<Vec<Token<'text>>>,
     },
     /// End of input, returned if the attempt to get the first character of the token was `None`.
     Eof,

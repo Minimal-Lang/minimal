@@ -1,7 +1,7 @@
 //! A comment token, line or block, doc or regular, not recusive.
 
 use crate::tokenizer::{
-    token::{span::Span, Error, TokenValue},
+    token::{Error, TokenValue},
     tokenize::{Tokenize, TokenizeResult},
     InputTextIter,
 };
@@ -28,10 +28,8 @@ macro_rules! get_v {
                 return TokenizeResult::Token {
                     lexeme: &$chars[$start..$chars.len()],
                     value: TokenValue::Error(Error::UnterminatedBlockComment),
-                    span: Span {
-                        from: $start,
-                        to: $chars.len() - 1,
-                    },
+                    span: $start..$chars.len(),
+                    errors: None,
                 };
             }
             _ => {
@@ -42,10 +40,8 @@ macro_rules! get_v {
                         doc: false,
                         content: &$chars[$content_start..$chars.len()],
                     }),
-                    span: Span {
-                        from: $start,
-                        to: $chars.len() - 1,
-                    },
+                    span: $start..$chars.len(),
+                    errors: None,
                 };
             }
         }
@@ -54,77 +50,66 @@ macro_rules! get_v {
 
 impl<'text> Tokenize<'text> for Comment<'text> {
     fn tokenize(chars: &'text [char], iter: &mut InputTextIter<'text>) -> TokenizeResult<'text> {
-        if let Some(v) = iter.peek(0) {
-            let '/' = v.1 else { return TokenizeResult::NoMatch };
-
-            let (mut content_start, block) = match iter.peek(1) {
-                Some((idx, '/')) => (idx + 1, false),
-                Some((idx, '*')) => (idx + 1, true),
-                _ => return TokenizeResult::NoMatch,
-            };
-
-            let start = v.0;
-
-            let v = get_v!(iter.nth(2) => iter, block, chars, start, v, content_start);
-
-            let doc = match block {
-                true => *v.1 == '*',
-                false => *v.1 == '/',
-            };
-
-            iter.next();
-
-            if doc {
-                content_start = v.0 + 1;
-            }
-
-            let end = loop {
-                let Some(_) = iter.peek(0) else {
-                    if block {
-                        return TokenizeResult::Token {
-                            lexeme: &chars[start..chars.len()],
-                            value: TokenValue::Error(Error::UnterminatedBlockComment),
-                            span: Span {
-                                from: start,
-                                to: chars.len(),
-                            },
-                        }
-                    } else {
-                        break chars.len();
-                    }
-                };
-                iter.next();
-                if let Some(v) = iter.peek(0) {
-                    if block {
-                        if let '*' = v.1 {
-                            if let Some((idx, '/')) = iter.peek(1) {
-                                break idx;
-                            }
-                        }
-                    } else if let '\n' = v.1 {
-                        break v.0;
-                    }
-                } else {
-                    break chars.len();
-                }
-            };
-
-            let content = &chars[content_start..end];
-
-            TokenizeResult::Token {
-                lexeme: &chars[start..end],
-                value: TokenValue::Comment(Comment {
-                    block,
-                    doc,
-                    content,
-                }),
-                span: Span {
-                    from: start,
-                    to: end,
-                },
-            }
+        let (v, start) = if let Some(v @ (idx, '/')) = iter.peek(0) {
+            (v, idx)
         } else {
-            TokenizeResult::Eof
+            return TokenizeResult::NoMatch;
+        };
+        let (mut content_start, is_block) = match iter.peek(1) {
+            Some((idx, '/')) => (idx + 1, false),
+            Some((idx, '*')) => (idx + 1, true),
+            _ => return TokenizeResult::NoMatch,
+        };
+
+        let v = get_v!(iter.nth(2) => iter, is_block, chars, start, v, content_start);
+
+        let is_doc = match is_block {
+            true => *v.1 == '*',
+            false => *v.1 == '/',
+        };
+
+        iter.next();
+
+        if is_doc {
+            content_start = v.0 + 1;
+        }
+
+        let (end, content_end) = loop {
+            if let Some(v) = iter.peek(0) {
+                if is_block {
+                    if let '*' = v.1 {
+                        if let Some((idx, '/')) = iter.peek(1) {
+                            iter.nth(1);
+                            break (idx + 1, v.0);
+                        }
+                    }
+                } else if let '\n' = v.1 {
+                    break (v.0, v.0);
+                }
+            } else if is_block {
+                return TokenizeResult::Token {
+                    lexeme: &chars[start..chars.len()],
+                    value: TokenValue::Error(Error::UnterminatedBlockComment),
+                    span: start..chars.len(),
+                    errors: None,
+                };
+            } else {
+                break (chars.len(), chars.len());
+            }
+            iter.next();
+        };
+
+        let content = &chars[content_start..content_end];
+
+        TokenizeResult::Token {
+            lexeme: &chars[start..end],
+            value: TokenValue::Comment(Comment {
+                block: is_block,
+                doc: is_doc,
+                content,
+            }),
+            span: start..end,
+            errors: None,
         }
     }
 }

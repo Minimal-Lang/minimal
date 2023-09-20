@@ -1,71 +1,79 @@
 //! The module for string literals.
 
-use crate::tokenizer::{
-    token::{self, span::Span, TokenValue},
-    tokenize::{Tokenize, TokenizeResult},
+use std::string::String as StdString;
+
+use crate::{
+    tokenizer::{
+        token::{self, Token, TokenValue},
+        tokenize::{Tokenize, TokenizeResult},
+    },
+    util::unescape::unescape,
 };
 
 /// A string token value.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct String<'s> {
+pub struct String {
     /// The unescaped value under the string.
-    pub s: &'s str,
+    pub s: StdString,
 }
 
-impl<'s> Tokenize<'s> for String<'s> {
+impl<'s> Tokenize<'s> for String {
     fn tokenize(
-        text: &'s [char],
+        chars: &'s [char],
         iter: &mut crate::tokenizer::InputTextIter<'s>,
     ) -> TokenizeResult<'s> {
-        if let Some(v) = iter.peek(0) {
-            if *v.1 == '\"' {
-                let start_idx = v.0;
-                let mut end_idx = v.0;
-                iter.next();
+        let start_idx = match iter.peek(0) {
+            Some((idx, '"')) => idx,
+            Some(_) => return TokenizeResult::NoMatch,
+            None => return TokenizeResult::Eof,
+        };
 
-                let mut string = std::string::String::new();
+        let mut end_idx = chars.len();
+        iter.next();
 
-                let mut ended = false;
+        let mut string = StdString::new();
+        let mut errors: Vec<Token<'s>> = Vec::new();
 
-                while let Some(v) = iter.next() {
-                    end_idx = v.0;
-                    match *v.1 {
-                        '"' => {
-                            ended = true;
-                            break;
+        while let Some(v) = iter.next() {
+            end_idx = v.0;
+            match *v.1 {
+                '"' => {
+                    return TokenizeResult::Token {
+                        lexeme: &chars[start_idx..end_idx],
+                        value: TokenValue::String(String { s: string }),
+                        span: start_idx..end_idx,
+                        errors: Some(errors),
+                    };
+                }
+                '\\' => {
+                    if v.0 == chars.len() - 1 {}
+                    let unescaped = unescape(&chars[v.0 + 1..]);
+
+                    match unescaped.len {
+                        0 => (),
+                        v => {
+                            iter.nth(v - 1);
                         }
-                        '\\' => match iter.next() {
-                            _ => (),
-                        }, // TODO: finish escape sequences
-                        _ => string.push(*v.1),
                     }
-                }
-                if ended {
-                    TokenizeResult::Token {
-                        lexeme: &text[start_idx..=end_idx],
-                        value: TokenValue::String(String {
-                            s: Box::leak(Box::new(string)),
+
+                    match unescaped.res {
+                        Ok(v) => string.push(v),
+                        Err(e) => errors.push(Token {
+                            lexeme: &chars[v.0..unescaped.len],
+                            value: TokenValue::UnescapeError(e),
+                            span: v.0..unescaped.len,
                         }),
-                        span: Span {
-                            from: start_idx,
-                            to: end_idx,
-                        },
-                    }
-                } else {
-                    TokenizeResult::Token {
-                        lexeme: &text[start_idx..=end_idx],
-                        value: TokenValue::Error(token::Error::UnterminatedStringLiteral),
-                        span: Span {
-                            from: start_idx,
-                            to: end_idx,
-                        },
                     }
                 }
-            } else {
-                TokenizeResult::NoMatch
+                _ => string.push(*v.1),
             }
-        } else {
-            TokenizeResult::Eof
+        }
+
+        TokenizeResult::Token {
+            lexeme: &chars[start_idx..end_idx],
+            value: TokenValue::Error(token::Error::UnterminatedStringLiteral),
+            span: start_idx..end_idx,
+            errors: None,
         }
     }
 }

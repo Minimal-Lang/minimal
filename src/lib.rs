@@ -16,4 +16,4 @@
 
 pub mod tokenizer;
 
-pub(crate) mod util;
+pub mod util;

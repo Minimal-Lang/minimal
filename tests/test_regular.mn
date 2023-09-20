@@ -1,0 +1,63 @@
+~ Lines that start with a tilde (`~`) are removed.
+~
+~ Any code that doesn't make sense is an intentional
+~ edge case test.
+~
+~ Test shebang
+#!/usr/bin/minimal-repl
+
+~ Test comments
+
+// This is a comment
+
+/// This is a doc comment
+
+/*/* This is a
+ block comment*/*/
+
+/*** This is a
+* block doc comment
+**/
+
+~ Test idents
+
+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWQXYZ _0123456789
+
+~ Test delimiters
+
+#, ;(){}[].:
+
+~ Test operators
+
+& && &= | || |=
+@ ! != ? x=y + += - -= / /= * *= % %= < <= 20<<50 > >= >>
+
+~ Test chars
+
+'\\' '"' '\"' '\0'
+
+~ Test strings
+
+~ `\+` is an invalid escape test
+"\\ \" \+ ' \' "="\u0fff \x0F","žßö"
+
+~ Test characters
+
+'\\' '\"' '"'='\u{0fff}' '\'','ž' 'ß' 'ö'
+
+~ Test numbers
+
+0b01
+0o01234567
+0123456789
+0x0123456789ABcdEF
+
+0b01.01
+0o01234567.01234567
+0123456789.0123456789
+0x0123456789ABcdEF.0123456789ABcdEF
+
+0b01.01e01
+0o01234567.01234567e01234567
+0123456789.0123456789e0123456789
+~ Hexadecimals don't have exponents

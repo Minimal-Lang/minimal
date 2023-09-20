@@ -2,7 +2,7 @@
 
 use crate::tokenizer::tokenize::{Tokenize, TokenizeResult};
 
-use super::{span::Span, TokenValue};
+use super::TokenValue;
 
 /// An identifier, or keyword.
 ///
@@ -42,10 +42,8 @@ impl<'ident> Tokenize<'ident> for Ident<'ident> {
                 TokenizeResult::Token {
                     lexeme,
                     value: TokenValue::Ident(Self { value: lexeme }),
-                    span: Span {
-                        from: start_idx,
-                        to: end_idx,
-                    },
+                    span: start_idx..end_idx,
+                    errors: None,
                 }
             } else {
                 TokenizeResult::NoMatch

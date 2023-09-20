@@ -35,6 +35,11 @@ where
         self.idx += 1;
         ret
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.slice.len();
+
+        (len, Some(len))
+    }
 }
 
 impl<'a, T> Iter<'a, T> {

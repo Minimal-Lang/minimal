@@ -5,7 +5,7 @@ use crate::tokenizer::{
     InputTextIter,
 };
 
-use super::{span::Span, TokenValue};
+use super::TokenValue;
 
 /// A delimiter (e.g. semicolons, commas, brackets) token.
 #[repr(u8)]
@@ -44,10 +44,8 @@ macro_rules! pattern {
         Some(TokenizeResult::Token {
             lexeme: &$chars[$lexeme_and_span..=$lexeme_and_span],
             value: TokenValue::Delim(Delim::$name),
-            span: Span {
-                from: $lexeme_and_span,
-                to: $lexeme_and_span,
-            },
+            span: $lexeme_and_span..$lexeme_and_span + 1,
+            errors: None,
         })
     }};
 }

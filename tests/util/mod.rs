@@ -6,5 +6,7 @@ pub fn str_to_chars(string: &str) -> Vec<char> {
 }
 
 mod structs;
-
 pub use structs::*;
+
+mod file;
+pub use file::*;
