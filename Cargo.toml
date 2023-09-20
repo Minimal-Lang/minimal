@@ -1,0 +1,13 @@
+[package]
+name = "minimal-compiler"
+version = "0.1.0"
+edition = "2021"
+description = "The Minimal programming language compiler."
+
+[[bin]]
+path = "minc/main.rs"
+name = "minc"
+
+[dependencies]
+
+[dev-dependencies]
