@@ -18,7 +18,8 @@ pub fn exclude_comment_lines(contents: &[char]) -> Vec<char> {
     let mut vec: Vec<char> = Vec::new();
 
     for line in contents.split(|v| *v == '\n') {
-        if !line.starts_with(&['~']) {
+        if let Some('~') = line.first() {
+        } else {
             for c in line {
                 vec.push(*c);
             }

@@ -34,8 +34,6 @@ pub enum TokenizeResult<'text> {
     /// `value` is the value,
     /// `span` is the span.
     Token {
-        /// The whole token as a character array.
-        lexeme: &'text [char],
         /// The value of the token as an enum variant.
         value: TokenValue<'text>,
         /// The span of the token.

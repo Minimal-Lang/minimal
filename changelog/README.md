@@ -2,7 +2,7 @@
 
 This is where every change is written.
 
-Write your changes in files named like `<MAJOR>/<MINOR>.<PATCH>.md`. The version can be obtained from the Cargo.toml file at the root.
+Write all your changes in files named like `<MAJOR>/<MINOR>.<PATCH>.md`. The version can be obtained from the Cargo.toml file at the root.
 
 # Template:
 
@@ -16,5 +16,7 @@ Write your changes in files named like `<MAJOR>/<MINOR>.<PATCH>.md`. The version
 ## Bugfixes
 
 ## Changes
+
+## Improvements
 
 ```

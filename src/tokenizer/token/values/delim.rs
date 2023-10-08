@@ -42,7 +42,6 @@ macro_rules! pattern {
     ($iter:expr, $chars:expr, $lexeme_and_span:expr => $name:ident) => {{
         $iter.next();
         Some(TokenizeResult::Token {
-            lexeme: &$chars[$lexeme_and_span..=$lexeme_and_span],
             value: TokenValue::Delim(Delim::$name),
             span: $lexeme_and_span..$lexeme_and_span + 1,
             errors: None,
@@ -51,7 +50,7 @@ macro_rules! pattern {
 }
 
 impl<'text> Tokenize<'text> for Delim {
-    fn tokenize(chars: &'text [char], iter: &mut InputTextIter<'text>) -> TokenizeResult<'text> {
+    fn tokenize(_chars: &'text [char], iter: &mut InputTextIter<'text>) -> TokenizeResult<'text> {
         if let Some(v) = iter.peek(0) {
             let v0 = v.0;
             let val = match *v.1 {

@@ -1,7 +1,7 @@
 //! The module for number literals.
 
 use crate::tokenizer::{
-    token::{Error, TokenValue},
+    token::{Error, Token, TokenValue},
     tokenize::{Tokenize, TokenizeResult},
     InputTextIter,
 };
@@ -36,13 +36,25 @@ pub struct Number<'int, 'fract> {
     pub fract_part: Option<&'fract [char]>,
 }
 
-/// Used in the implementation of Tokenize
-fn number_matches_base(number: char, base: &Base) -> bool {
+/// Used in the implementation of [`Tokenize`] for [`Number`]
+fn number_matches_base(number: char, base: &Base) -> (bool, bool) {
     match base {
-        Base::Binary => matches!(number, '0'..='1' | '_'),
-        Base::Octal => matches!(number, '0'..='7' | '_'),
-        Base::Decimal => matches!(number, '0'..='9' | '_'),
-        Base::Hexadecimal => matches!(number, '0'..='9' | 'a'..='f' | 'A'..='F' | '_'),
+        Base::Binary => (
+            matches!(number, '0' | '1' | '_'),
+            matches!(number, '0'..='9' | '_'),
+        ),
+        Base::Octal => (
+            matches!(number, '0'..='7' | '_'),
+            matches!(number, '0'..='9' | '_'),
+        ),
+        Base::Decimal => {
+            let v = matches!(number, '0'..='9' | '_');
+            (v, v)
+        }
+        Base::Hexadecimal => (
+            matches!(number, '0'..='9' | 'a'..='f' | 'A'..='F' | '_'),
+            matches!(number, '0'..='9' | '_'),
+        ),
     }
 }
 
@@ -56,7 +68,7 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
 
         let start = v.0;
 
-        let base = if *v.1 == '0' {
+        let (has_base_prefix, base) = if *v.1 == '0' {
             if let Some((_, base @ ('b' | 'o' | 'x'))) = iter.peek(1) {
                 v = match iter.nth(1) {
                     Some(v) => {
@@ -65,7 +77,6 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
                     }
                     None => {
                         return TokenizeResult::Token {
-                            lexeme: &chars[v.0..chars.len()],
                             value: TokenValue::Error(Error::NoNumberAfterBase),
                             span: v.0..chars.len(),
                             errors: None,
@@ -74,30 +85,38 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
                 };
 
                 match base {
-                    'b' => Base::Binary,
-                    'o' => Base::Octal,
-                    'x' => Base::Hexadecimal,
+                    'b' => (true, Base::Binary),
+                    'o' => (true, Base::Octal),
+                    'x' => (true, Base::Hexadecimal),
                     _ => unreachable!(),
                 }
             } else {
-                Base::Decimal
+                (false, Base::Decimal)
             }
         } else {
-            Base::Decimal
+            (false, Base::Decimal)
         };
 
         let start_int = v.0;
 
         let mut end_int = start_int;
 
+        let mut error_digits = Vec::new();
+
         while let Some(v) = iter.peek(0) {
             end_int = v.0;
 
-            if !number_matches_base(*v.1, &base) {
-                if end_int == start_int {
+            let matches = number_matches_base(*v.1, &base);
+
+            if !matches.0 {
+                if matches.1 {
+                    error_digits.push(Token {
+                        value: TokenValue::Error(Error::DigitOutOfBaseRange),
+                        span: v.0..v.0 + 1,
+                    })
+                } else if end_int == start_int && !has_base_prefix {
                     return TokenizeResult::NoMatch;
                 }
-                break;
             }
             iter.next();
         }
@@ -108,35 +127,40 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
         // if the number only has an integer part
         // (it doesn't have a dot).
         let Some((_, '.')) = iter.peek(0) else {
-            return TokenizeResult::Token { lexeme: &chars[start..end_int], value: TokenValue::Number(Number { base, int_part: int, fract_part: None, }), span: int_range, errors: None };
+            return TokenizeResult::Token {  value: TokenValue::Number(Number { base, int_part: int, fract_part: None, }), span: int_range, errors: Some(error_digits), };
         };
 
         let v = if let Some(v) = iter.peek(1) {
-            if number_matches_base(*v.1, &base) {
+            let matches = number_matches_base(*v.1, &base);
+            if matches.0 {
                 iter.nth(1);
+                v
+            } else if matches.1 {
+                error_digits.push(Token {
+                    value: TokenValue::Error(Error::DigitOutOfBaseRange),
+                    span: v.0..v.0 + 1,
+                });
                 v
             } else {
                 return TokenizeResult::Token {
-                    lexeme: &chars[start..end_int],
                     value: TokenValue::Number(Number {
                         base,
                         int_part: int,
                         fract_part: None,
                     }),
                     span: int_range,
-                    errors: None,
+                    errors: Some(error_digits),
                 };
             }
         } else {
             return TokenizeResult::Token {
-                lexeme: &chars[start..end_int],
                 value: TokenValue::Number(Number {
                     base,
                     int_part: int,
                     fract_part: None,
                 }),
                 span: int_range,
-                errors: None,
+                errors: Some(error_digits),
             };
         };
 
@@ -144,9 +168,15 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
         let mut end_fract = v.0;
 
         while let Some(v) = iter.peek(0) {
-            if !number_matches_base(*v.1, &base) {
-                end_fract = v.0;
+            let matches = number_matches_base(*v.1, &base);
+            end_fract = v.0;
+            if !matches.0 {
                 break;
+            } else if matches.1 {
+                error_digits.push(Token {
+                    value: TokenValue::Error(Error::DigitOutOfBaseRange),
+                    span: v.0..v.0 + 1,
+                });
             }
             iter.next();
         }
@@ -155,7 +185,6 @@ impl<'a> Tokenize<'a> for Number<'a, 'a> {
         let fract = &chars[fract_range];
 
         TokenizeResult::Token {
-            lexeme: &chars[start..end_fract],
             value: TokenValue::Number(Number {
                 base,
                 int_part: int,

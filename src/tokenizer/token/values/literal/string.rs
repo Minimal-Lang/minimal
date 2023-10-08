@@ -39,14 +39,12 @@ impl<'s> Tokenize<'s> for String {
             match *v.1 {
                 '"' => {
                     return TokenizeResult::Token {
-                        lexeme: &chars[start_idx..end_idx],
                         value: TokenValue::String(String { s: string }),
                         span: start_idx..end_idx,
                         errors: Some(errors),
                     };
                 }
                 '\\' => {
-                    if v.0 == chars.len() - 1 {}
                     let unescaped = unescape(&chars[v.0 + 1..]);
 
                     match unescaped.len {
@@ -59,9 +57,8 @@ impl<'s> Tokenize<'s> for String {
                     match unescaped.res {
                         Ok(v) => string.push(v),
                         Err(e) => errors.push(Token {
-                            lexeme: &chars[v.0..unescaped.len],
                             value: TokenValue::UnescapeError(e),
-                            span: v.0..unescaped.len,
+                            span: v.0 + 1..unescaped.len,
                         }),
                     }
                 }
@@ -70,7 +67,6 @@ impl<'s> Tokenize<'s> for String {
         }
 
         TokenizeResult::Token {
-            lexeme: &chars[start_idx..end_idx],
             value: TokenValue::Error(token::Error::UnterminatedStringLiteral),
             span: start_idx..end_idx,
             errors: None,

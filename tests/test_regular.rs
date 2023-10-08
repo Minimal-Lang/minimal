@@ -1,97 +1,76 @@
-use minimal_compiler::tokenizer::token::{comment::Comment, TokenValue};
+use minimal_compiler::util::strip_shebang;
 use util::TestTokenizer;
-
-use crate::util::str_to_chars;
 
 mod util;
 
 #[test]
-fn test_tokenizer_line_comment() {
-    let test = TestTokenizer::new("// This is a comment");
-
-    assert_eq!(test[0].lexeme, &str_to_chars("// This is a comment"));
-    assert_eq!(
-        test[0].value,
-        TokenValue::Comment(Comment {
-            doc: false,
-            block: false,
-            content: &str_to_chars(" This is a comment")
-        })
-    );
-    assert_eq!(test[0].span, 0..20)
-}
-
-#[test]
-fn test_tokenizer_line_doc_comment() {
-    let test = TestTokenizer::new("/// This is a doc comment");
-
-    assert_eq!(test[0].lexeme, &str_to_chars("/// This is a doc comment"));
-    assert_eq!(
-        test[0].value,
-        TokenValue::Comment(Comment {
-            doc: true,
-            block: false,
-            content: &str_to_chars(" This is a doc comment")
-        })
-    );
-    assert_eq!(test[0].span, 0..25)
-}
-
-#[test]
-fn test_tokenizer_block_comment() {
-    let test = TestTokenizer::new(
-        "/* This is a block comment,
-        and it continues... */",
+fn test_regular() {
+    let file = util::read_file_contents("./tests/test_regular.mn").expect(
+        "file `./tests/test_regular.mn` not found (are you running this test from the crate root?)",
     );
 
-    assert_eq!(
-        test[0].lexeme,
-        &str_to_chars(
-            "/* This is a block comment,
-        and it continues... */"
-        )
-    );
-    assert_eq!(
-        test[0].value,
-        TokenValue::Comment(Comment {
-            doc: false,
-            block: true,
-            content: &str_to_chars(
-                " This is a block comment,
-        and it continues... "
-            )
-        })
-    );
-    assert_eq!(test[0].span, 0..58)
-}
+    let code = util::exclude_comment_lines(&file);
 
-#[test]
-fn test_tokenizer_block_doc_comment() {
-    let test = TestTokenizer::new(
-        "/** This is a block doc comment,
-        * and it continues...
-        */",
-    );
+    let code = strip_shebang(&code);
 
-    assert_eq!(
-        test[0].lexeme,
-        &str_to_chars(
-            "/** This is a block doc comment,
-        * and it continues...
-        */"
-        )
+    let test = TestTokenizer::from_chars(code);
+
+    dbg!(&code[2..23]);
+
+    assert_token!(code, test[0], lexeme = "\n", span = 0..1, kind = whitespace);
+    assert_token!(code, test[1], lexeme = "\n", span = 1..2, kind = whitespace);
+    assert_token!(
+        code,
+        test[2],
+        lexeme = "// This is a comment\n",
+        span = 2..23,
+        kind = comment,
+        block = false,
+        doc = false,
+        content = " This is a comment"
     );
-    assert_eq!(
-        test[0].value,
-        TokenValue::Comment(Comment {
-            doc: true,
-            block: true,
-            content: &str_to_chars(
-                " This is a block doc comment,
-        * and it continues...
-        "
-            )
-        })
+    assert_token!(
+        code,
+        test[3],
+        lexeme = "\n",
+        span = 23..24,
+        kind = whitespace
     );
-    assert_eq!(test[0].span, 0..73)
+    assert_token!(
+        code,
+        test[4],
+        lexeme = "/// This is a doc comment",
+        span = 23..49,
+        kind = comment,
+        block = false,
+        doc = true,
+        content = " This is a doc comment"
+    );
+    assert_token!(
+        code,
+        test[5],
+        lexeme = "\n",
+        span = 49..50,
+        kind = whitespace
+    );
+    assert_token!(
+        code,
+        test[6],
+        lexeme = "/*/* This is a\n block comment*/*/",
+        span = 50..83,
+        kind = comment,
+        block = true,
+        doc = false,
+        content = " This is a doc comment"
+    );
+    assert_token!(
+        code,
+        test[7],
+        lexeme = "/*/* This is a\n block comment*/*/",
+        span = 83..84,
+        kind = comment,
+        block = true,
+        doc = true,
+        content = " This is a doc comment"
+    );
 }

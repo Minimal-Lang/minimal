@@ -81,7 +81,6 @@ macro_rules! pattern {
     ($iter:expr, $chars:expr, $lexeme_and_span:expr => $name:ident) => {{
         $iter.next();
         Some(TokenizeResult::Token {
-            lexeme: &$chars[$lexeme_and_span..=$lexeme_and_span],
             value: TokenValue::Operator(Operator::$name),
             span: $lexeme_and_span..$lexeme_and_span + 1,
             errors: None,
@@ -92,14 +91,12 @@ macro_rules! pattern {
         if $iter.peek(0).is_some_and(|v| *v.1 == $next) {
             $iter.next();
             Some(TokenizeResult::Token {
-                lexeme: &$chars[$lexeme_and_span_start..=$lexeme_and_span_end],
                 value: TokenValue::Operator(Operator::$name2),
                 span: $lexeme_and_span_start..$lexeme_and_span_end + 1,
                 errors: None,
             })
         } else {
             Some(TokenizeResult::Token {
-                lexeme: &$chars[$lexeme_and_span_start..=$lexeme_and_span_end],
                 value: TokenValue::Operator(Operator::$name1),
                 span: $lexeme_and_span_start..$lexeme_and_span_end + 1,
                 errors: None,
@@ -112,14 +109,12 @@ macro_rules! pattern {
             if *v == $next1 {
                 $iter.next();
                 Some(TokenizeResult::Token {
-                    lexeme: &$chars[$lexeme_and_span_start..=$lexeme_and_span_end],
                     value: TokenValue::Operator(Operator::$name2),
                     span: $lexeme_and_span_start..$lexeme_and_span_end + 1,
                     errors: None,
                 })
             } else {
                 Some(TokenizeResult::Token {
-                    lexeme: &$chars[$lexeme_and_span_start..=$lexeme_and_span_end],
                     value: TokenValue::Operator(Operator::$name3),
                     span: $lexeme_and_span_start..$lexeme_and_span_end + 1,
                     errors: None,
@@ -127,7 +122,6 @@ macro_rules! pattern {
             }
         } else {
             Some(TokenizeResult::Token {
-                lexeme: &$chars[$lexeme_and_span_start..=$lexeme_and_span_end],
                 value: TokenValue::Operator(Operator::$name1),
                 span: $lexeme_and_span_start..$lexeme_and_span_end + 1,
                 errors: None,
@@ -138,7 +132,7 @@ macro_rules! pattern {
 
 impl<'text> Tokenize<'text> for Operator {
     fn tokenize(
-        chars: &'text [char],
+        _chars: &'text [char],
         iter: &mut crate::tokenizer::InputTextIter<'text>,
     ) -> crate::tokenizer::tokenize::TokenizeResult<'text> {
         let v = if let Some(v) = iter.peek(0) {
