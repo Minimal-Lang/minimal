@@ -38,12 +38,13 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWQXYZ _0123456789
 
 ~ Test strings
 
-~ `\+` is an invalid escape test
-"\\ \" \+ ' \' "="\u0fff \x0F","žßö"
+~ `\+` and \u{110000} is an invalid escape test
+"\\ \" \+ ' \' "="\u0fff \u{110000} \x0F","žßö"
 
 ~ Test characters
 
-'\\' '\"' '"'='\u{0fff}' '\'','ž' 'ß' 'ö'
+~ `\+` and \u{110000} is an invalid escape test
+'\\' '\"' '\+' '"'='\u{0fff}' '\u{110000}' '\'','ž' 'ß' 'ö'
 
 ~ Test numbers
 
@@ -56,8 +57,3 @@ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWQXYZ _0123456789
 0o01234567.01234567
 0123456789.0123456789
 0x0123456789ABcdEF.0123456789ABcdEF
-
-0b01.01e01
-0o01234567.01234567e01234567
-0123456789.0123456789e0123456789
-~ Hexadecimals don't have exponents

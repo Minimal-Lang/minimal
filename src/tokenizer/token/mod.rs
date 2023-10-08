@@ -20,9 +20,7 @@ pub mod comment;
 /// A token, output of the tokenizer, input of the parser.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token<'a> {
-    /// The whole token as a string
-    pub lexeme: &'a [char],
-    /// The value of the token of an enum variant.
+    /// The value of the token of as enum variant.
     pub value: TokenValue<'a>,
     /// The span of the token.
     pub span: Range<usize>,
@@ -42,8 +40,6 @@ pub enum TokenValue<'a> {
     Ident(ident::Ident<'a>),
 
     /// A number literal (integer or floating point).
-    ///
-    /// The tokenizer **doesn't** make sure number works with its radix
     Number(literal::Number<'a, 'a>),
     /// A string literal.
     String(literal::String),
@@ -83,8 +79,8 @@ pub enum Error {
     /// No number after base prefix in number literal.
     NoNumberAfterBase,
 
-    /// No number after exponent sign in number literal.
-    NoNumberAfterExponentSign,
+    /// Digit out of base range.
+    DigitOutOfBaseRange,
 
     /// Unterminated block comment.
     UnterminatedBlockComment,

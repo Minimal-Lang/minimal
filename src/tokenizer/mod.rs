@@ -39,7 +39,6 @@ macro_rules! tokenize {
         match <$t as Tokenize>::tokenize($self.chars, &mut $self.iter) {
             TokenizeResult::Token {
                 value,
-                lexeme,
                 span,
                 errors,
             } => {
@@ -48,11 +47,7 @@ macro_rules! tokenize {
                         $self.error_stack = Some(VecDeque::from(errors));
                     }
                 }
-                return Some(Token {
-                    lexeme,
-                    value,
-                    span,
-                });
+                return Some(Token { value, span });
             }
             TokenizeResult::Eof => return None,
             _ => (),
@@ -86,7 +81,6 @@ impl<'input> Tokenizer<'input> {
         if peek.1.is_whitespace() {
             self.iter.next();
             return Some(Token {
-                lexeme: &self.chars[peek.0..=peek.0],
                 value: token::TokenValue::Whitespace,
                 span: peek.0..peek.0 + 1,
             });
@@ -100,9 +94,11 @@ impl<'input> Tokenizer<'input> {
         // in this order; from least complex to most complex.
 
         tokenize!(self => Delim);
-        tokenize!(self => Operator);
 
         tokenize!(self => Ident);
+
+        tokenize!(self => Operator);
+
         tokenize!(self => literal::String);
 
         // Numbers are more complex than strings.
@@ -110,7 +106,6 @@ impl<'input> Tokenizer<'input> {
 
         if let Some((idx, _)) = self.iter.peek(0) {
             Some(Token {
-                lexeme: &self.chars[idx..=idx],
                 value: token::TokenValue::Error(token::Error::InvalidCharacter),
                 span: idx..idx + 1,
             })

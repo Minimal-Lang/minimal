@@ -35,7 +35,7 @@ pub fn parse_str_hex_byte(src: &[char]) -> u8 {
     if len == 0 {
         0
     } else if len == 1 {
-        parse_digit::<16>(src[0]) * 16
+        parse_digit::<16>(src[0])
     } else {
         (parse_digit::<16>(src[1]) * 16) + parse_digit::<16>(src[0])
     }
@@ -47,22 +47,16 @@ pub fn parse_str_hex_byte(src: &[char]) -> u8 {
 /// If characters in `src` are invalid, they will count as 0.
 #[rustfmt::skip]
 pub fn parse_str_bin_byte(src: &[char]) -> u8 {
-    if src.is_empty() {
-        return 0;
-    }
-
     let len = src.len();
 
-    let mut ret = 0;
-
-    if len >= 1 { ret += parse_digit::<2>(src[0]); ret *= 2; }
-    if len >= 2 { ret += parse_digit::<2>(src[1]); ret *= 2; }
-    if len >= 3 { ret += parse_digit::<2>(src[2]); ret *= 2; }
-    if len >= 4 { ret += parse_digit::<2>(src[3]); ret *= 2; }
-    if len >= 5 { ret += parse_digit::<2>(src[4]); ret *= 2; }
-    if len >= 6 { ret += parse_digit::<2>(src[5]); ret *= 2; }
-    if len >= 7 { ret += parse_digit::<2>(src[6]); ret *= 2; }
-    if len >= 8 { ret += parse_digit::<2>(src[7]); }
+    let mut ret = if len >= 1 { parse_digit::<2>(src[0]) } else { return 0; };
+    if len >= 2 { ret *= 2; ret += parse_digit::<2>(src[1]); } else { return ret; }
+    if len >= 3 { ret *= 2; ret += parse_digit::<2>(src[2]); } else { return ret; }
+    if len >= 4 { ret *= 2; ret += parse_digit::<2>(src[3]); } else { return ret; }
+    if len >= 5 { ret *= 2; ret += parse_digit::<2>(src[4]); } else { return ret; }
+    if len >= 6 { ret *= 2; ret += parse_digit::<2>(src[5]); } else { return ret; }
+    if len >= 7 { ret *= 2; ret += parse_digit::<2>(src[6]); } else { return ret; }
+    if len >= 8 { ret *= 2; ret += parse_digit::<2>(src[7]); } else { return ret; }
 
     ret
 }

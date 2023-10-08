@@ -30,7 +30,7 @@ impl<'ident> Tokenize<'ident> for Ident<'ident> {
 
                 while let Some(v) = iter.peek(0) {
                     if !(v.1.is_alphanumeric() || *v.1 == '_') {
-                        end_idx = v.0 - 1;
+                        end_idx = v.0;
 
                         break;
                     }
@@ -40,7 +40,6 @@ impl<'ident> Tokenize<'ident> for Ident<'ident> {
                 let lexeme = &chars[start_idx..end_idx];
 
                 TokenizeResult::Token {
-                    lexeme,
                     value: TokenValue::Ident(Self { value: lexeme }),
                     span: start_idx..end_idx,
                     errors: None,
